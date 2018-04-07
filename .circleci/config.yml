@@ -1,0 +1,66 @@
+version: 2
+workflows:
+  version: 2
+  alpine-builds:
+    jobs:
+      - alpine-bin64
+      - alpine-bin64-omp
+      - alpine-bin64-i64
+      - alpine-bin64-noaff
+
+defaults: &defaults
+  docker:
+    - image: alpine:3.7
+      environment:
+        TARGET_BOX: "LINUX64_MUSL"
+        COMMON_FLAGS: "DYNAMIC_ARCH=1 TARGET=NEHALEM NUM_THREADS=32"
+
+jobs:
+  alpine-bin64:
+    <<: *defaults
+    environment:
+      BTYPE: "BINARY=64"
+    steps: &steps
+      - run:
+          name: Install dependencies
+          command: build-base gfortran perl linux-headers
+      - checkout
+      - run:
+          name: Check out the merge commit
+          command: | # For consistency with Travis
+            if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
+              git remote set-url origin git@github.com:xianyi/OpenBLAS.git
+              git fetch origin +refs/pull/$(basename ${CIRCLE_PULL_REQUEST})/merge
+              git checkout -qf FETCH_HEAD
+            fi
+      - run:
+          name: Build OpenBLAS
+          command: make QUIET_MAKE=1 ${COMMON_FLAGS} ${BTYPE}
+      - run:
+          name: Run BLAS tests
+          command: make -C test ${COMMON_FLAGS} ${BTYPE}
+      - run:
+          name: Run CBLAS tests
+          command: make -C ctest ${COMMON_FLAGS} ${BTYPE}
+      - run:
+          name: Run unit tests
+          command: make -C utest ${COMMON_FLAGS} ${BTYPE}
+
+  alpine-bin64-omp:
+    <<: *defaults
+    environment:
+      BTYPE: "BINARY=64 USE_OPENMP=1"
+    steps: *steps
+
+  alpine-bin64-i64:
+    <<: *defaults
+    environment:
+      BTYPE: "BINARY=64 INTERFACE64=1"
+    steps: *steps
+
+  # Build with the same flags as the Alpine package for OpenBLAS
+  alpine-bin64-noaff:
+    <<: *defaults
+    environment:
+      BTYPE: "BINARY=64 NO_AFFINITY=1 USE_OPENMP=0 NO_LAPACK=0 TARGET=core2"
+    steps: *steps
