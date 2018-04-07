@@ -25,7 +25,7 @@ jobs:
           name: Install dependencies
           command: |
             apk update
-            apk add git ssh build-base gfortran perl linux-headers
+            apk add git openssh build-base gfortran perl linux-headers
       - checkout
       - run:
           name: Check out the merge commit
