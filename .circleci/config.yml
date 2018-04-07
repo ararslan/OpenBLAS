@@ -31,7 +31,7 @@ jobs:
           name: Check out the merge commit
           command: | # For consistency with Travis
             if [ -n "${CIRCLE_PULL_REQUEST}" ]; then
-              git remote set-url origin git@github.com:xianyi/OpenBLAS.git
+              git remote set-url origin git@github.com:ararslan/OpenBLAS.git
               git fetch origin +refs/pull/$(basename ${CIRCLE_PULL_REQUEST})/merge
               git checkout -qf FETCH_HEAD
             fi
