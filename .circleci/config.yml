@@ -23,7 +23,9 @@ jobs:
     steps: &steps
       - run:
           name: Install dependencies
-          command: build-base gfortran perl linux-headers
+          command: |
+            apk update
+            apk add gfortran perl linux-headers
       - checkout
       - run:
           name: Check out the merge commit
